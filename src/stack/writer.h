@@ -22,10 +22,21 @@
 #define wasm_stack_writer_h
 
 #include "wasm.h"
+#include "wasm-binary.h"
 
 namespace wasm {
 
 namespace stack {
+
+class Writer {
+  Writer(Builder& builder, BufferWithRandomAccess& o, bool possibleBlockContent=false) {
+  }
+};
+
+class PossibleBlockContentWriter : public Writer {
+  PossibleBlockContentWriter(Builder& builder, BufferWithRandomAccess& o) :
+    Writer(builder, o, true) {}
+};
 
 } // namespace stack
 

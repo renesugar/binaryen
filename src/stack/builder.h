@@ -77,12 +77,59 @@ namespace wasm {
 namespace stack {
 
 // Builds Stack IR for a given expression
-class Builder {
+struct Builder : public Visitor<WasmBinaryWriter> {
+  bool debug;
+
   std::vector<Expression*> nodes;
 
-public:
-  Builder(Expression* expr) {
+  Builder(Expression* expr, bool debug=false) {
+    assert(depth == 0);
+    recurse(curr);
+    assert(depth == 0);
   }
+
+  void recurse(Expression* curr);
+
+  // emits a node, but if it is a block with no name, emit a list of its contents
+  void recursePossibleBlockContents(Expression* curr);
+
+  // AST writing via visitors
+  int depth = 0; // only for debugging
+
+  std::vector<Name> breakStack;
+  Function::DebugLocation lastDebugLocation;
+  size_t lastBytecodeOffset;
+
+  void visit(Expression* curr);
+  void visitBlock(Block *curr);
+  void visitIf(If *curr);
+  void visitLoop(Loop *curr);
+  int32_t getBreakIndex(Name name);
+  void visitBreak(Break *curr);
+  void visitSwitch(Switch *curr);
+  void visitCall(Call *curr);
+  void visitCallImport(CallImport *curr);
+  void visitCallIndirect(CallIndirect *curr);
+  void visitGetLocal(GetLocal *curr);
+  void visitSetLocal(SetLocal *curr);
+  void visitGetGlobal(GetGlobal *curr);
+  void visitSetGlobal(SetGlobal *curr);
+  void emitMemoryAccess(size_t alignment, size_t bytes, uint32_t offset);
+  void visitLoad(Load *curr);
+  void visitStore(Store *curr);
+  void visitAtomicRMW(AtomicRMW *curr);
+  void visitAtomicCmpxchg(AtomicCmpxchg *curr);
+  void visitAtomicWait(AtomicWait *curr);
+  void visitAtomicWake(AtomicWake *curr);
+  void visitConst(Const *curr);
+  void visitUnary(Unary *curr);
+  void visitBinary(Binary *curr);
+  void visitSelect(Select *curr);
+  void visitReturn(Return *curr);
+  void visitHost(Host *curr);
+  void visitNop(Nop *curr);
+  void visitUnreachable(Unreachable *curr);
+  void visitDrop(Drop *curr);
 };
 
 } // namespace stack
