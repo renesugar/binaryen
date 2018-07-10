@@ -15,29 +15,10 @@
  */
 
 //
-// wasm.h: WebAssembly representation and processing library, in one
-//         header file.
+// wasm.h: Define Binaryen IR, a representation for WebAssembly, with
+//         all core parts in one simple header file.
 //
-// This represents WebAssembly in an AST format, with a focus on making
-// it easy to not just inspect but also to process. For example, some
-// things that this enables are:
-//
-//  * Interpreting: See wasm-interpreter.h.
-//  * Optimizing: See asm2wasm.h, which performs some optimizations
-//                after code generation.
-//  * Validation: See wasm-validator.h.
-//  * Pretty-printing: See Print.cpp.
-//
-
-//
-// wasm.js internal WebAssembly representation design:
-//
-//  * Unify where possible. Where size isn't a concern, combine
-//    classes, so binary ops and relational ops are joined. This
-//    simplifies that AST and makes traversals easier.
-//  * Optimize for size? This might justify separating if and if_else
-//    (so that if doesn't have an always-empty else; also it avoids
-//    a branch).
+// For more overview, see README.md
 //
 
 #ifndef wasm_wasm_h
@@ -200,6 +181,7 @@ public:
     AtomicCmpxchgId,
     AtomicWaitId,
     AtomicWakeId,
+    CustomId,
     NumExpressionIds
   };
   Id _id;
@@ -597,6 +579,19 @@ public:
     type = unreachable;
   }
   Unreachable(MixedArena& allocator) : Unreachable() {}
+};
+
+// A "custom" node, not representing a standard wasm construct. This is an
+// internal Binaryen implementation method for letting us mix additional info
+// alongside wasm IR when that is useful, that is, it lets an Expression*
+// point to either wasm or to something custom. The Visitor class works on
+// this, for that reason, but note that the Walker classes do not (there is no
+// clear meaning to walking non-wasm IR).
+class Custom : public SpecificExpression<Expression::CustomId> {
+public:
+  Custom(MixedArena& allocator) : Custom() {}
+
+  void* data; // this could be anything, really
 };
 
 // Globals
