@@ -21,6 +21,8 @@
 #include "wasm-binary.h"
 #include "ir/branch-utils.h"
 #include "ir/module-utils.h"
+#include "stack/builder.h"
+#include "stack/writer.h"
 
 namespace wasm {
 
@@ -246,8 +248,8 @@ void WasmBinaryWriter::writeFunctionSignatures() {
 }
 
 void WasmBinaryWriter::writeExpression(Expression* curr) {
-  wasm::stack::Builder stackBuilder(curr);
-  wasm::stack::Writer stackWriter(stackBuilder, o);
+  wasm::stack::Builder stackBuilder(curr, debug);
+  wasm::stack::Writer stackWriter(stackBuilder, o, debug);
 }
 
 void WasmBinaryWriter::writeFunctions() {
@@ -277,7 +279,7 @@ void WasmBinaryWriter::writeFunctions() {
     if (numLocalsByType[f32]) o << U32LEB(numLocalsByType[f32]) << binaryType(f32);
     if (numLocalsByType[f64]) o << U32LEB(numLocalsByType[f64]) << binaryType(f64);
 
-    wasm::stack::Builder stackBuilder(function->body);
+    wasm::stack::Builder functionBodyStackBuilder(function->body);
     wasm::stack::Writer stackWriter(stackBuilder, o);
 
     o << int8_t(BinaryConsts::End);

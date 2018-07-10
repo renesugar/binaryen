@@ -589,7 +589,7 @@ public:
 // clear meaning to walking non-wasm IR).
 class Custom : public SpecificExpression<Expression::CustomId> {
 public:
-  Custom(MixedArena& allocator) : Custom() {}
+  Custom(MixedArena& allocator) {}
 
   void* data; // this could be anything, really
 };

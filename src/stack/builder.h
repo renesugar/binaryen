@@ -77,14 +77,18 @@ namespace wasm {
 namespace stack {
 
 // Builds Stack IR for a given expression
-struct Builder : public Visitor<WasmBinaryWriter> {
+struct Builder : public Visitor<Builder> {
   bool debug;
 
   std::vector<Expression*> nodes;
 
-  Builder(Expression* expr, bool debug=false) {
+  Builder(Expression* expr, bool debug=false, bool possibleBlockContents=false) {
     assert(depth == 0);
-    recurse(curr);
+    if (!possibleBlockContent) {
+      recurse(curr);
+    } else {
+      recursePossibleBlockContents(curr);
+    }
     assert(depth == 0);
   }
 
@@ -130,6 +134,14 @@ struct Builder : public Visitor<WasmBinaryWriter> {
   void visitNop(Nop *curr);
   void visitUnreachable(Unreachable *curr);
   void visitDrop(Drop *curr);
+};
+
+// A builder for function bodies, where the toplevel element is a possible
+// list of items (so we don't need to emit an explicit block if we have more
+// than one item).
+class FunctionBodyBuilder : public Builder {
+  FunctionBodyBuilder(Expression* expr, bool debug=false) {
+    Builder(expr, debug, true) {}
 };
 
 } // namespace stack

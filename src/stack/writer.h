@@ -28,14 +28,59 @@ namespace wasm {
 
 namespace stack {
 
-class Writer {
-  Writer(Builder& builder, BufferWithRandomAccess& o, bool possibleBlockContent=false) {
-  }
-};
+struct Writer : public Visitor<Writer> {
+  bool debug;
 
-class PossibleBlockContentWriter : public Writer {
-  PossibleBlockContentWriter(Builder& builder, BufferWithRandomAccess& o) :
-    Writer(builder, o, true) {}
+  BufferWithRandomAccess& o;
+
+  Writer(Builder& builder, BufferWithRandomAccess& o, bool debug=false) : o(o) {
+    for (auto* node : builder.nodes) {
+      process(node);
+    }
+  }
+
+  void process(Expression* curr) {
+    if (!curr) return; // nullptr - just skip it
+    visit(curr);
+  }
+
+  // AST writing via visitors
+  int depth = 0; // only for debugging
+
+  std::vector<Name> breakStack;
+  Function::DebugLocation lastDebugLocation;
+  size_t lastBytecodeOffset;
+
+  void visit(Expression* curr);
+  void visitBlock(Block *curr);
+  void visitIf(If *curr);
+  void visitLoop(Loop *curr);
+  int32_t getBreakIndex(Name name);
+  void visitBreak(Break *curr);
+  void visitSwitch(Switch *curr);
+  void visitCall(Call *curr);
+  void visitCallImport(CallImport *curr);
+  void visitCallIndirect(CallIndirect *curr);
+  void visitGetLocal(GetLocal *curr);
+  void visitSetLocal(SetLocal *curr);
+  void visitGetGlobal(GetGlobal *curr);
+  void visitSetGlobal(SetGlobal *curr);
+  void emitMemoryAccess(size_t alignment, size_t bytes, uint32_t offset);
+  void visitLoad(Load *curr);
+  void visitStore(Store *curr);
+  void visitAtomicRMW(AtomicRMW *curr);
+  void visitAtomicCmpxchg(AtomicCmpxchg *curr);
+  void visitAtomicWait(AtomicWait *curr);
+  void visitAtomicWake(AtomicWake *curr);
+  void visitConst(Const *curr);
+  void visitUnary(Unary *curr);
+  void visitBinary(Binary *curr);
+  void visitSelect(Select *curr);
+  void visitReturn(Return *curr);
+  void visitHost(Host *curr);
+  void visitNop(Nop *curr);
+  void visitUnreachable(Unreachable *curr);
+  void visitDrop(Drop *curr);
 };
 
 } // namespace stack
